@@ -22,10 +22,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # Pinned via requirements.txt so a new ruff release cannot turn CI red on
+      # a commit that did not change any code.
       - name: Lint
-        uses: astral-sh/ruff-action@v3
-        with:
-          args: check
+        run: ruff check
 
       - name: Test
         run: pytest -q
