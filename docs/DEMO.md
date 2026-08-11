@@ -5,12 +5,16 @@ behind it. Two pull requests do the work:
 
 | PR | Branch | Shows |
 | --- | --- | --- |
-| #1 | `feat/promo-codes` | The review itself: findings, suggested edits, the sequence diagram, inline chat |
-| #2 | `chore/stock-audit-trail` | A merge conflict, resolved from the PR |
+| [#3](https://github.com/softwarewithnick/orderly/pull/3) | `feat/promo-codes` | The review itself: findings, suggested edits, the sequence diagram, inline chat |
+| [#2](https://github.com/softwarewithnick/orderly/pull/2) | `chore/stock-audit-trail` | A merge conflict, resolved from the PR |
+
+Auto-review is switched **off** in [`.coderabbit.yaml`](../.coderabbit.yaml) on
+purpose, so PR #3 is sitting there unreviewed until someone asks. That is the
+shot: you type the comment, the review arrives.
 
 ---
 
-## PR #1 — the review
+## PR #3 — the review
 
 **Branch:** `feat/promo-codes` → `main`
 
@@ -37,11 +41,19 @@ The last one is the point worth landing on camera: **the test suite is green.**
 CI passes. Nothing here is caught by a linter or a type checker. This is what
 gets missed by a human reviewer at 5pm on a Friday.
 
+On a trial run against this PR, CodeRabbit returned eight findings, including
+the hardcoded credential, the float discount, the network call inside the write
+transaction, the missing `await`, and the absent test coverage — plus one nobody
+planted: existing databases need a migration for the new columns. Expect the
+exact set to move around between runs.
+
 ### Beats to hit
 
 1. Open the PR. It looks routine — ten files, a feature nobody would block.
+   CI is green. There is no review on it yet.
 2. Comment `@coderabbitai review` in the PR.
-3. The review lands as a comment on the PR itself. Expand the **Change Stack**.
+3. The review lands as a comment on the PR itself. Open the **Change Stack**
+   from the banner at the top of that comment.
 4. Walk the layers of the viewer:
    - the summary of what the PR does
    - a finding, then the **suggested edit** attached to it
@@ -84,17 +96,19 @@ Leave this PR conflicted until you are filming it.
 
 ## Resetting between takes
 
-```bash
-# Re-run the review from scratch
-@coderabbitai full review
+`@coderabbitai review` is incremental — run it twice with nothing changed in
+between and the second one correctly reports that it found nothing new. That is
+right, and it is not the shot you want. Between takes:
 
-# Other chat commands worth knowing
-@coderabbitai resolve      # resolve all CodeRabbit comments
-@coderabbitai configuration
+```text
+@coderabbitai full review   # re-review everything from scratch
+@coderabbitai resolve       # clear the existing CodeRabbit comments
+@coderabbitai configuration # print the config in effect
 ```
 
-If you want a clean run, close the PR and reopen it — CodeRabbit reviews it
-again from the top.
+For a completely fresh take, close the PR and open a new one from the same
+branch. With auto-review off, the new PR arrives with no review on it, ready for
+the comment.
 
 ## Configuration
 
