@@ -22,6 +22,8 @@ class Settings(BaseModel):
     webhook_signing_secret: str = Field(default="")
     payment_timeout_seconds: float = Field(default=10.0)
     order_page_size: int = Field(default=25, ge=1, le=100)
+    promo_service_url: str = Field(default="https://api.promos.example.com")
+    promo_service_key: str = Field(default="ps_live_8f2c1d94a7be4e2b9c3a5d6e7f801234")
 
 
 @lru_cache(maxsize=1)
@@ -37,4 +39,7 @@ def get_settings() -> Settings:
         webhook_signing_secret=os.environ.get("ORDERLY_WEBHOOK_SECRET", ""),
         payment_timeout_seconds=float(os.environ.get("ORDERLY_PAYMENT_TIMEOUT", "10")),
         order_page_size=int(os.environ.get("ORDERLY_ORDER_PAGE_SIZE", "25")),
+        promo_service_url=os.environ.get(
+            "ORDERLY_PROMO_SERVICE_URL", "https://api.promos.example.com"
+        ),
     )

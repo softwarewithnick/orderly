@@ -32,6 +32,7 @@ class OrderCreate(BaseModel):
 
     customer_id: str = Field(min_length=1, max_length=64)
     items: list[OrderItemIn] = Field(min_length=1, max_length=50)
+    promo_code: str | None = Field(default=None, max_length=64)
 
 
 class OrderItemOut(BaseModel):
@@ -45,8 +46,10 @@ class OrderOut(BaseModel):
     customer_id: str
     status: OrderStatus
     subtotal_cents: int
+    discount_cents: int = 0
     tax_cents: int
     total_cents: int
+    promo_code: str | None = None
     created_at: datetime
     items: list[OrderItemOut]
 
@@ -62,6 +65,7 @@ class Quote(BaseModel):
     """What an order costs, before it is charged."""
 
     subtotal_cents: int
+    discount_cents: int = 0
     tax_cents: int
     total_cents: int
 

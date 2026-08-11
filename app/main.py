@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app import db
-from app.routers import catalog, orders, webhooks
+from app.routers import catalog, orders, promotions, webhooks
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
 
@@ -31,6 +31,7 @@ def create_app() -> FastAPI:
     )
     app.include_router(catalog.router)
     app.include_router(orders.router)
+    app.include_router(promotions.router)
     app.include_router(webhooks.router)
 
     @app.get("/healthz", tags=["ops"])

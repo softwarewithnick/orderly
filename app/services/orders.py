@@ -29,7 +29,7 @@ from app.models import (
     OrderStatus,
     Quote,
 )
-from app.services import inventory, notifications, payments, pricing
+from app.services import inventory, notifications, payments, pricing, promotions
 from app.services.pricing import PricedLine
 
 logger = logging.getLogger(__name__)
@@ -41,8 +41,10 @@ def _row_to_order(row: sqlite3.Row, items: list[OrderItemOut]) -> OrderOut:
         customer_id=row["customer_id"],
         status=OrderStatus(row["status"]),
         subtotal_cents=row["subtotal_cents"],
+        discount_cents=row["discount_cents"],
         tax_cents=row["tax_cents"],
         total_cents=row["total_cents"],
+        promo_code=row["promo_code"],
         created_at=datetime.fromisoformat(row["created_at"]),
         items=items,
     )
@@ -54,17 +56,19 @@ def _persist(order_id: str, payload: OrderCreate, quote: Quote, lines: list[Pric
     conn = db.get_connection()
     conn.execute(
         """
-        INSERT INTO orders (id, customer_id, status, subtotal_cents, tax_cents,
-                            total_cents, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (id, customer_id, status, subtotal_cents, discount_cents,
+                            tax_cents, total_cents, promo_code, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             order_id,
             payload.customer_id,
             OrderStatus.PENDING.value,
             quote.subtotal_cents,
+            quote.discount_cents,
             quote.tax_cents,
             quote.total_cents,
+            payload.promo_code,
             created_at,
         ),
     )
@@ -82,7 +86,18 @@ async def create_order(payload: OrderCreate) -> OrderOut:
     # Phase 1: everything that must be atomic.
     with db.transaction() as conn:
         lines = inventory.reserve(conn, payload.items)
-        quote = pricing.quote(lines)
+
+        percent_off = 0.0
+        if payload.promo_code:
+            try:
+                promo = promotions.lookup(payload.promo_code)
+                if promo is not None and await promotions.verify_with_partner(promo):
+                    promotions.redeem(promo.code)
+                    percent_off = promo.percent_off
+            except Exception:
+                pass
+
+        quote = pricing.quote(lines, percent_off)
         created_at = _persist(order_id, payload, quote, lines)
 
     # Phase 2: the network call, with no write lock held.
@@ -121,15 +136,17 @@ async def create_order(payload: OrderCreate) -> OrderOut:
         customer_id=payload.customer_id,
         status=OrderStatus.AUTHORIZED,
         subtotal_cents=quote.subtotal_cents,
+        discount_cents=quote.discount_cents,
         tax_cents=quote.tax_cents,
         total_cents=quote.total_cents,
+        promo_code=payload.promo_code,
         created_at=datetime.fromisoformat(created_at),
         items=[
             OrderItemOut(sku=x.sku, quantity=x.quantity, unit_price_cents=x.unit_price_cents)
             for x in lines
         ],
     )
-    await notifications.send_order_confirmation(order)
+    notifications.send_order_confirmation(order)
     return order
 
 
