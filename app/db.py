@@ -50,6 +50,13 @@ CREATE TABLE IF NOT EXISTS order_items (
     PRIMARY KEY (order_id, sku)
 );
 
+CREATE TABLE IF NOT EXISTS stock_events (
+    id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    sku    TEXT    NOT NULL,
+    delta  INTEGER NOT NULL,
+    reason TEXT    NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS payments (
     id            TEXT PRIMARY KEY,
     order_id      TEXT    NOT NULL REFERENCES orders (id),

@@ -70,10 +70,24 @@ def reserve(conn: sqlite3.Connection, items: list[OrderItemIn]) -> list[PricedLi
     return lines
 
 
-def release(conn: sqlite3.Connection, lines: list[PricedLine]) -> None:
-    """Put reserved stock back, e.g. after a payment is declined."""
+def release(
+    conn: sqlite3.Connection,
+    lines: list[PricedLine],
+    *,
+    reason: str = "payment_failed",
+) -> None:
+    """Put reserved stock back, e.g. after a payment is declined.
+
+    Every release is also written to ``stock_events``, so that a later audit can
+    tell an automatic restock apart from a manual inventory correction. Without
+    that trail, a discrepancy at the end of the month is unattributable.
+    """
     for line in lines:
         conn.execute(
             "UPDATE products SET stock = stock + ? WHERE sku = ?",
             (line.quantity, line.sku),
+        )
+        conn.execute(
+            "INSERT INTO stock_events (sku, delta, reason) VALUES (?, ?, ?)",
+            (line.sku, line.quantity, reason),
         )

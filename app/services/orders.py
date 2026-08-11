@@ -169,14 +169,18 @@ def list_orders(customer_id: str, cursor: str | None, limit: int) -> OrderPage:
 
     placeholders = ",".join("?" for _ in rows)
     item_rows = db.query(
-        f"SELECT order_id, sku, quantity, unit_price_cents FROM order_items "  # noqa: S608
+        f"SELECT order_id, sku, quantity, unit_price_cents FROM order_items "
         f"WHERE order_id IN ({placeholders})",
         tuple(r["id"] for r in rows),
     )
     items_by_order: dict[str, list[OrderItemOut]] = {}
     for r in item_rows:
         items_by_order.setdefault(r["order_id"], []).append(
-            OrderItemOut(sku=r["sku"], quantity=r["quantity"], unit_price_cents=r["unit_price_cents"])
+            OrderItemOut(
+                sku=r["sku"],
+                quantity=r["quantity"],
+                unit_price_cents=r["unit_price_cents"],
+            )
         )
 
     orders = [_row_to_order(r, items_by_order.get(r["id"], [])) for r in rows]
