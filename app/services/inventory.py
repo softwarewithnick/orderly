@@ -9,10 +9,13 @@ earlier.
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 
 from app.models import OrderItemIn
 from app.services.pricing import PricedLine
+
+logger = logging.getLogger(__name__)
 
 
 class InventoryError(Exception):
@@ -71,9 +74,17 @@ def reserve(conn: sqlite3.Connection, items: list[OrderItemIn]) -> list[PricedLi
 
 
 def release(conn: sqlite3.Connection, lines: list[PricedLine]) -> None:
-    """Put reserved stock back, e.g. after a payment is declined."""
-    for line in lines:
-        conn.execute(
-            "UPDATE products SET stock = stock + ? WHERE sku = ?",
-            (line.quantity, line.sku),
-        )
+    """Put reserved stock back, e.g. after a payment is declined.
+
+    Restocking is a single batched statement so that releasing a fifty line
+    order is one round trip rather than fifty, and so the whole release either
+    applies or does not.
+    """
+    if not lines:
+        return
+
+    logger.info("Releasing %d line(s) back to stock", len(lines))
+    conn.executemany(
+        "UPDATE products SET stock = stock + ? WHERE sku = ?",
+        [(line.quantity, line.sku) for line in lines],
+    )
