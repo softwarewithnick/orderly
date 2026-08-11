@@ -3,7 +3,8 @@
 language: en-US
 
 reviews:
-  profile: chill
+  # assertive surfaces more than chill does. This repo wants the density.
+  profile: assertive
   request_changes_workflow: false
   high_level_summary: true
   poem: true
@@ -51,9 +52,12 @@ reviews:
 
     - path: "app/routers/**"
       instructions: >
-        Routers stay thin. Flag business rules that belong in a service, and any
+        Routers stay thin. Flag business rules that belong in a service. Every
+        router except webhooks must carry the require_api_key dependency --
+        flag any router or endpoint that is reachable unauthenticated, and any
         endpoint that returns data for a customer without checking the caller is
-        entitled to it.
+        entitled to it. Flag unauthenticated lookup endpoints that let a caller
+        enumerate records by guessing identifiers.
 
     - path: "tests/**"
       instructions: >
