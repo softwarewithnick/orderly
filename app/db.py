@@ -35,8 +35,10 @@ CREATE TABLE IF NOT EXISTS orders (
     customer_id  TEXT    NOT NULL,
     status       TEXT    NOT NULL,
     subtotal_cents INTEGER NOT NULL,
+    discount_cents INTEGER NOT NULL DEFAULT 0,
     tax_cents      INTEGER NOT NULL,
     total_cents    INTEGER NOT NULL,
+    promo_code     TEXT,
     created_at   TEXT    NOT NULL
 );
 
@@ -48,6 +50,14 @@ CREATE TABLE IF NOT EXISTS order_items (
     quantity         INTEGER NOT NULL CHECK (quantity > 0),
     unit_price_cents INTEGER NOT NULL,
     PRIMARY KEY (order_id, sku)
+);
+
+CREATE TABLE IF NOT EXISTS promo_codes (
+    code            TEXT PRIMARY KEY,
+    percent_off     REAL    NOT NULL,
+    max_redemptions INTEGER NOT NULL,
+    redemptions     INTEGER NOT NULL DEFAULT 0,
+    active          INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS payments (

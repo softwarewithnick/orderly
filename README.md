@@ -59,6 +59,22 @@ pytest
 | `app/security.py` | API key auth and webhook signature verification |
 | `app/models.py` | Pydantic request/response schemas |
 
+## Promo codes
+
+A percentage-off code can be applied at checkout:
+
+```bash
+curl -X POST http://127.0.0.1:8000/orders \
+  -H "X-API-Key: $ORDERLY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"customer_id": "cust-1",
+       "items": [{"sku": "SKU-LAMP", "quantity": 2}],
+       "promo_code": "LAUNCH10"}'
+```
+
+The storefront can preview a code before checkout with
+`GET /promotions/validate?code=LAUNCH10`.
+
 ## Money
 
 All money is stored and computed as **integer cents**. There is no float arithmetic

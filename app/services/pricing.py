@@ -51,12 +51,19 @@ def tax_cents(subtotal: int) -> int:
     return apply_rate(subtotal, TAX_RATE)
 
 
-def quote(lines: list[PricedLine]) -> Quote:
-    """Price a whole order.
+def discount_cents(subtotal: int, percent_off: float) -> int:
+    """How much a promo code takes off a subtotal."""
+    return int(subtotal * (percent_off / 100))
 
-    Tax is charged on the subtotal, and the total is the sum of two already
-    rounded integers, so ``subtotal + tax == total`` holds exactly.
-    """
+
+def quote(lines: list[PricedLine], percent_off: float = 0.0) -> Quote:
+    """Price a whole order, applying a promo code if one was given."""
     subtotal = subtotal_cents(lines)
     tax = tax_cents(subtotal)
-    return Quote(subtotal_cents=subtotal, tax_cents=tax, total_cents=subtotal + tax)
+    discount = discount_cents(subtotal, percent_off) if percent_off else 0
+    return Quote(
+        subtotal_cents=subtotal,
+        discount_cents=discount,
+        tax_cents=tax,
+        total_cents=subtotal - discount + tax,
+    )
