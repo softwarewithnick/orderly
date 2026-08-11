@@ -1,0 +1,72 @@
+# CodeRabbit configuration
+# Docs: https://docs.coderabbit.ai/getting-started/configure-coderabbit
+language: en-US
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: true
+  review_status: true
+
+  # Renders the call flow of a change as a diagram in the review comment.
+  # Worth keeping on here: a checkout touches a router, three services, and the
+  # database, and the diagram is the fastest way to see that path.
+  sequence_diagrams: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+
+  path_instructions:
+    - path: "app/services/pricing.py"
+      instructions: >
+        Money is integer cents everywhere. Flag any float or binary
+        floating-point arithmetic in a money path, and any rounding that is not
+        a single Decimal quantize with ROUND_HALF_UP at the end.
+
+    - path: "app/services/inventory.py"
+      instructions: >
+        Stock changes must be atomic. Flag any read-then-write on the stock
+        column that is not a single conditional UPDATE inside a write
+        transaction, and any code that trusts a previously read stock value.
+
+    - path: "app/services/payments.py"
+      instructions: >
+        This module is the only caller of a third party. Flag missing timeouts,
+        missing idempotency keys, swallowed exceptions, and any path that
+        reports success when the charge outcome is unknown.
+
+    - path: "app/security.py"
+      instructions: >
+        Secret comparisons must use hmac.compare_digest, never ==. Flag any
+        webhook handler reachable without a verified signature.
+
+    - path: "app/db.py"
+      instructions: >
+        Every query must be parameterized. Flag any SQL built with f-strings,
+        % formatting, .format(), or concatenation of caller-supplied values.
+
+    - path: "app/routers/**"
+      instructions: >
+        Routers stay thin. Flag business rules that belong in a service, and any
+        endpoint that returns data for a customer without checking the caller is
+        entitled to it.
+
+    - path: "tests/**"
+      instructions: >
+        Flag new behaviour that arrives without a test, especially error paths,
+        concurrency, and money arithmetic.
+
+  tools:
+    ruff:
+      enabled: true
+    gitleaks:
+      enabled: true
+    markdownlint:
+      enabled: true
+
+chat:
+  auto_reply: true
