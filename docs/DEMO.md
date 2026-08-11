@@ -6,7 +6,7 @@ behind it. Two pull requests do the work:
 | PR | Branch | Shows |
 | --- | --- | --- |
 | #1 | `feat/promo-codes` | The review itself: findings, suggested edits, the sequence diagram, inline chat |
-| #2 | `chore/inventory-backorders` | A merge conflict, resolved from the PR |
+| #2 | `chore/stock-audit-trail` | A merge conflict, resolved from the PR |
 
 ---
 
@@ -66,11 +66,13 @@ gets missed by a human reviewer at 5pm on a Friday.
 
 ## PR #2 — the merge conflict
 
-**Branch:** `chore/inventory-backorders` → `main`
+**Branch:** `chore/stock-audit-trail` → `main`
 
 Both this branch and `main` rewrote `release()` in
-`app/services/inventory.py`. `main` batched the restock into one statement;
-the branch taught it about backorders. Git cannot reconcile them.
+`app/services/inventory.py`. `main` batched the restock into a single
+`executemany`; the branch kept the loop and added an audit-trail insert next to
+each update. Same function, same lines, two reasonable answers — git cannot
+pick one.
 
 GitHub will show **"This branch has conflicts that must be resolved."** That is
 the cue for the conflict-resolution beat — resolved from the PR page, without
